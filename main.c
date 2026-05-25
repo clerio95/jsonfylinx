@@ -15,6 +15,13 @@ typedef struct {
     double estoque;
 } ItemEstoque;
 
+typedef struct {
+    int    id;
+    char   produto[MAX_PRODUTO];
+    double custo;
+    double venda;
+} ItemReajuste;
+
 static void trim(char *s) {
     char *p = s + strlen(s) - 1;
     while (p >= s && isspace((unsigned char)*p)) *p-- = '\0';
@@ -81,6 +88,19 @@ static int parse_row(const char *line, ItemEstoque *item) {
     return 1;
 }
 
+/* Strips Brazilian thousands dots and converts decimal comma to dot. */
+static double parse_br_number(const char *s) {
+    char buf[64];
+    int j = 0;
+    for (int i = 0; s[i] && j < (int)sizeof(buf) - 1; i++) {
+        if (s[i] == '.')       continue;
+        else if (s[i] == ',')  buf[j++] = '.';
+        else                   buf[j++] = s[i];
+    }
+    buf[j] = '\0';
+    return strtod(buf, NULL);
+}
+
 static void json_escape(FILE *out, const char *s) {
     while (*s) {
         unsigned char c = (unsigned char)*s++;
@@ -93,6 +113,71 @@ static void json_escape(FILE *out, const char *s) {
             default:   fputc(c, out);      break;
         }
     }
+}
+
+static int parse_row_reajuste(const char *line, ItemReajuste *item) {
+    if (line[0] != '|') return 0;
+
+    char f[7][MAX_PRODUTO];
+    if (split_pipes(line, f, 7) < 6) return 0;
+    if (!is_digits_only(f[0])) return 0;
+
+    item->id = atoi(f[0]);
+    strncpy(item->produto, f[1], MAX_PRODUTO - 1);
+    item->produto[MAX_PRODUTO - 1] = '\0';
+    item->custo = parse_br_number(f[3]);
+    item->venda = parse_br_number(f[5]);
+
+    return 1;
+}
+
+static int parse_valor_estoque_reajustes(const char *in_path, const char *out_path) {
+    FILE *in = fopen(in_path, "r");
+    if (!in) {
+        fprintf(stderr, "Erro: não foi possível abrir '%s'\n", in_path);
+        return 0;
+    }
+    FILE *out = fopen(out_path, "w");
+    if (!out) {
+        fclose(in);
+        fprintf(stderr, "Erro: não foi possível criar '%s'\n", out_path);
+        return 0;
+    }
+
+    char line[MAX_LINE];
+    ItemReajuste item;
+    int first = 1;
+
+    fputs("[\n", out);
+
+    while (fgets(line, sizeof(line), in)) {
+        size_t len = strlen(line);
+        while (len > 0 && (line[len-1] == '\n' || line[len-1] == '\r'))
+            line[--len] = '\0';
+
+        if (!parse_row_reajuste(line, &item)) continue;
+
+        if (!first) fputs(",\n", out);
+        first = 0;
+
+        fputs("  {\n", out);
+        fprintf(out, "    \"id\": %d,\n", item.id);
+
+        fputs("    \"produto\": \"", out);
+        json_escape(out, item.produto);
+        fputs("\",\n", out);
+
+        fprintf(out, "    \"custo\": %.3f,\n", item.custo);
+        fprintf(out, "    \"venda\": %.3f\n", item.venda);
+
+        fputs("  }", out);
+    }
+
+    fputs("\n]\n", out);
+
+    fclose(in);
+    fclose(out);
+    return 1;
 }
 
 static int parse_posicao_estoque(const char *in_path, const char *out_path) {
@@ -188,6 +273,7 @@ int main(int argc, char *argv[]) {
 
     printf("\nSelecione o tipo de parser:\n");
     printf("  1. Posição de Estoque\n");
+    printf("  2. Valor do Estoque Reajustes\n");
     printf("\nOpção: ");
     fflush(stdout);
 
@@ -201,6 +287,11 @@ int main(int argc, char *argv[]) {
         case 1:
             printf("\nAnalisando arquivo com parser 'Posição de Estoque'...\n");
             if (!parse_posicao_estoque(argv[1], out_path))
+                return 1;
+            break;
+        case 2:
+            printf("\nAnalisando arquivo com parser 'Valor do Estoque Reajustes'...\n");
+            if (!parse_valor_estoque_reajustes(argv[1], out_path))
                 return 1;
             break;
         default:
