@@ -585,7 +585,7 @@ int main(int argc, char *argv[]) {
 
     printf("\nSelecione o tipo de parser:\n");
     printf("  1. Posição de Estoque\n");
-    printf("  2. Valor do Estoque Reajustes\n");
+    printf("  2. Valor do Estoque\n");
     printf("  3. Produtividade por Funcionários\n");
     printf("\nOpção: ");
     fflush(stdout);
@@ -603,7 +603,7 @@ int main(int argc, char *argv[]) {
                 return 1;
             break;
         case 2:
-            printf("\nAnalisando arquivo com parser 'Valor do Estoque Reajustes'...\n");
+            printf("\nAnalisando arquivo com parser 'Valor do Estoque'...\n");
             if (!parse_valor_estoque_reajustes(argv[1], out_path))
                 return 1;
             break;

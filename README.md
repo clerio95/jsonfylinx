@@ -12,9 +12,11 @@ The output JSON is saved in the same directory as the input file.
 
 ## Parsers
 
-| # | Name                  | Description                        |
-|---|-----------------------|------------------------------------|
-| 1 | Posição de Estoque    | Stock position report (table format) |
+| # | Name                          | Description                                      |
+|---|-------------------------------|--------------------------------------------------|
+| 1 | Posição de Estoque            | Stock position report (table format)             |
+| 2 | Valor do Estoque              | Stock value report (id, produto, custo, venda)   |
+| 3 | Produtividade por Funcionários | Sales productivity per employee (nested JSON)   |
 
 ## Download
 
