@@ -1,6 +1,9 @@
 # output files
 *.json
 
+# build intermediates
+*.o
+
 # editor
 .vscode/
 *.swp
