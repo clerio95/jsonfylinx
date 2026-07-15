@@ -1,6 +1,6 @@
 # output files
 *.json
-
+relatorio.txt
 # build intermediates
 *.o
 
