@@ -31,10 +31,11 @@ static void build_output_path(const char *in_path, const char *out_name,
 
 static const char *parser_nome(jfx_parser_t p) {
     switch (p) {
-        case JFX_POSICAO_ESTOQUE: return "Posição de Estoque";
-        case JFX_VALOR_ESTOQUE:   return "Valor do Estoque";
-        case JFX_PRODUTIVIDADE:   return "Produtividade por Funcionários";
-        default:                  return "desconhecido";
+        case JFX_POSICAO_ESTOQUE:       return "Posição de Estoque";
+        case JFX_VALOR_ESTOQUE:         return "Valor do Estoque";
+        case JFX_PRODUTIVIDADE:         return "Produtividade por Funcionários";
+        case JFX_MOVIMENTACAO_PRODUTOS: return "Movimentação de Produtos";
+        default:                        return "desconhecido";
     }
 }
 
@@ -43,7 +44,8 @@ int main(int argc, char *argv[]) {
         fprintf(stderr,
             "Uso: jsonfylinx <caminho_arquivo> <nome_saida> [parser]\n"
             "  parser (opcional): 1=Posição de Estoque, 2=Valor do Estoque,\n"
-            "                     3=Produtividade por Funcionários.\n"
+            "                     3=Produtividade por Funcionários,\n"
+            "                     4=Movimentação de Produtos.\n"
             "  Sem [parser], o tipo é detectado automaticamente.\n");
         return 1;
     }
@@ -51,8 +53,8 @@ int main(int argc, char *argv[]) {
     jfx_parser_t parser = JFX_AUTO;
     if (argc == 4) {
         int opt = atoi(argv[3]);
-        if (opt < 1 || opt > 3) {
-            fprintf(stderr, "Erro: parser '%s' inválido (use 1, 2 ou 3).\n", argv[3]);
+        if (opt < 1 || opt > 4) {
+            fprintf(stderr, "Erro: parser '%s' inválido (use 1, 2, 3 ou 4).\n", argv[3]);
             return 1;
         }
         parser = (jfx_parser_t)opt;
@@ -74,7 +76,7 @@ int main(int argc, char *argv[]) {
     if (parser == JFX_AUTO) {
         jfx_parser_t detected = jfx_detect(argv[1]);
         if (detected == JFX_AUTO) {
-            fprintf(stderr, "Erro: %s. Informe o parser manualmente (1, 2 ou 3).\n",
+            fprintf(stderr, "Erro: %s. Informe o parser manualmente (1, 2, 3 ou 4).\n",
                     jfx_status_str(JFX_ERR_DETECT_FAILED));
             return 1;
         }
